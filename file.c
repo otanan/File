@@ -2,6 +2,8 @@
 #include <ctype.h>
 #include "file.h"
 
+//FIX NEXT FUNCTION
+
 int nextInt(FILE *fp, int *ip) {
     if(!isNextInt(fp))
         return 0;
@@ -10,7 +12,6 @@ int nextInt(FILE *fp, int *ip) {
 
     //Fills the string with the number read, to-be-parsed
     next(fp, numberString);
-
     //Converts the number to base 10 and stores it in the
     //number pointer passed in
     *ip = strtol(numberString, NULL, 10);
@@ -139,10 +140,11 @@ int next(FILE *fp, String line) {
     while((current = getc(fp)) != EOF && !isspace(current))
         line[index++] = current;
 
-    //If we're at the end of the file, the 0 flag marks for that
-    if(current == EOF)
+    //If we're at the end of the file, and there was nothing read before
+    //the index will be 0, so we will be returning the flag for ending
+    if(current == EOF && index == 0)
         return 0;
-    //If the index was never incremented, but it's also not the end of the line
+    //If the index was never incremented, but it's also not the end of the file
     //we must've read whitespace, call ourselves back to read again
     else if(index == 0)
         return next(fp, line);
@@ -152,5 +154,5 @@ int next(FILE *fp, String line) {
 
     //If the string only consists of the terminating character or less
     //then you basically read nothing
-    return index <= 1 ? -1 : index;
+    return index;
 }
