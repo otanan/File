@@ -2,49 +2,46 @@
 #include <ctype.h>
 #include "file.h"
 
-//FIX NEXT FUNCTION
-
-int nextInt(FILE *fp, int *ip) {
-    if(!isNextInt(fp))
+int next_int(FILE *fp, int *ip) {
+    if(!is_next_int(fp))
         return 0;
 
-    char numberString[MAX_LINE_LENGTH];
-
+    char number_string[MAX_LINE_LENGTH];
     //Fills the string with the number read, to-be-parsed
-    next(fp, numberString);
+    next(fp, number_string);
     //Converts the number to base 10 and stores it in the
     //number pointer passed in
-    *ip = strtol(numberString, NULL, 10);
+    *ip = strtol(number_string, NULL, 10);
 
     //Success return value
     return 1;
 }
 
-int nextDouble(FILE *fp, double *dp) {
-    if(!isNextDouble(fp))
+int next_double(FILE *fp, double *dp) {
+    if(!is_next_double(fp))
         return 0;
 
-    char numberString[MAX_LINE_LENGTH];
+    char number_string[MAX_LINE_LENGTH];
 
-    next(fp, numberString);
+    next(fp, number_string);
 
-    *dp = strtod(numberString, NULL);
+    *dp = strtod(number_string, NULL);
 
     //Success
     return 1;
 }
 
-int nextDoubles(FILE *fp, int times, double *dp) {
+int next_doubles(FILE *fp, int times, double *dp) {
     for(int i = 0; i < times; i++) {
-        //If a single reading of nextDouble fails, the function fails as a whole
-        if(!nextDouble(fp, (dp + i))) 
+        //If a single reading of next_double fails, the function fails as a whole
+        if(!next_double(fp, (dp + i))) 
             return 0;
     }
     //Success
     return 1;
 }
 
-bool isNextInt(FILE *fp) {
+bool is_next_int(FILE *fp) {
     char line[MAX_LINE_LENGTH];
     int len;
  
@@ -71,7 +68,7 @@ bool isNextInt(FILE *fp) {
     return true;
 }
 
-bool isNextDouble(FILE *fp) {
+bool is_next_double(FILE *fp) {
     char line[MAX_LINE_LENGTH];
     int len;
 
@@ -83,9 +80,9 @@ bool isNextDouble(FILE *fp) {
 
     //Parse string to check if it's a number
     //There should only be one decimal
-    int decimalCount = 0;
+    int decimal_count = 0;
 
-    //Notice that this works similarly to isNextInt
+    //Notice that this works similarly to is_next_int
     //and returns positively even if the next number is technically an int
     //which just means that if we expect a float, and get an int
     //we'll end up promoting it just as we would want
@@ -98,7 +95,7 @@ bool isNextDouble(FILE *fp) {
 
         if(line[i] == '.') {
             //If there's two decimal points, it's not a float
-            if(++decimalCount > 1)
+            if(++decimal_count > 1)
                 return false;
             
             //Continue the loop, since we don't want to check if it's a digit,
@@ -115,24 +112,7 @@ bool isNextDouble(FILE *fp) {
     return true;
 }
 
-bool isNextString(FILE *fp) {
-    char line[MAX_LINE_LENGTH];
-    int len;
-
-    if((len = next(fp, line)) == -1)
-        return false;
-    
-
-    //Rewinds the read position to before the string read
-    fseek(fp, -len, SEEK_CUR);
-    //Checks if the first entry is a digit,
-    //if it isn't, then it's considered a string
-    //even if the following characters are
-    //i.e. spin32 is considered a string not a number
-    return !isdigit(line[0]);
-}
-
-int next(FILE *fp, String line) {
+int next(FILE *fp, char *line) {
     char current;
     int index = 0;
 
