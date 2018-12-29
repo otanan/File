@@ -4,7 +4,7 @@
 /******************************Define******************************/
 #define MAX_LINE_LENGTH 1000
 
-/******************************Prototypes******************************/
+/******************************PROTOTYPES******************************/
 //Gets the next string (also number as a string etc)
 //delimited by whitespace, newline, etc
 //and returns the length of the string
@@ -21,3 +21,8 @@ bool is_next_double(FILE *);
 int next_int(FILE *, int *);
 int next_double(FILE *, double *);
 int next_doubles(FILE *, int times, double *);
+//Reads the remaining line of the file
+//returns 1 if the pointer to the remainder of the file is store properly
+//retunrs 0 if there is no remaining text or other failure
+int remaining_line(FILE *, char *line);
+/***********************END PROTOTYPES***********************/
