@@ -1,148 +1,119 @@
 /***********************Include***********************/
+//For string converters (strtol etc.)
 #include <stdlib.h>
-#include <ctype.h>
+//For strlen
+#include <string.h>
+//For testing overflow (underflow) when casting longs to ints
+#include <limits.h>
 
 #include "file.h"
 
-int next(FILE *fp, char *line) {
-    char current;
-    int index = 0;
+//Add error checking for string to numbers
 
-    //Ends at end of file, space, and newline to separate strings
-    while((current = getc(fp)) != EOF && !isspace(current))
-        line[index++] = current;
+int next(FILE *fp, char *string) {
+    //If the next character is EOF, signal the end
+    if(getc(fp) == EOF)
+        return EOF;
+    //Rewind after having read the previous character to check for EOF
+    fseek(fp, -1, SEEK_CUR);
 
-    //If we're at the end of the file, and there was nothing read before
-    //the index will be 0, so we will be returning the flag for ending
-    if(current == EOF && index == 0)
-        return 0;
-    //If the index was never incremented, but it's also not the end of the file
-    //we must've read whitespace, call ourselves back to read again
-    else if(index == 0)
-        return next(fp, line);
-
-    //Ends the string
-    line[index++] = '\0';
-
-    //If the string only consists of the terminating character or less
-    //then you basically read nothing
-    return index;
+    fscanf(fp, "%s", string);
+    return strlen(string);
 }
 
 /***********************Getters***********************/
-bool is_next_int(FILE *fp) {
-    char line[MAX_LINE_LENGTH];
+bool is_next_long(FILE *fp) {
     int len;
-    //Immediately returns false if at EOF
-    if( (len = next(fp, line)) == 0)
+    char string[MAX_LINE_LENGTH];
+
+    if( (len = next(fp, string)) == EOF) {
+        printf("EOF, no next long.\n");
+        return false;
+    }
+    fseek(fp, -len, SEEK_CUR);
+    
+    char *end_of_number;
+    strtol(string, &end_of_number, 10);
+
+    return end_of_number[0] == '\0';
+}
+
+bool is_next_int(FILE *fp) {
+    //If there's no next long, then there definitely won't be an integer
+    //also handles checking for EOF
+    if(!is_next_long(fp))
         return false;
 
-    //Rewind from before the number
+    char string[MAX_LINE_LENGTH];
+    int len = next(fp, string);
     fseek(fp, -len, SEEK_CUR);
 
-    //Initializes the index for the loop early to alter the starting point
-    //Takes the sign into consideration
-    int i = 0;
-    if(line[i] == '-') {
-        //Checks edge case where the string is just "-"
-        if(len == 2)
-            return false;
-
-        i++;
-    }
-    //Go through the string and check if it's a number
-    for(; i < (len - 1); i++) {
-        //If there is a single entry that is not numeric, the string overall isn't a number
-        //i.e. 74G823 is not a number
-        if(!isdigit(line[i]))
-            return false;
-    
-    }
-
-    return true;
+    long number = strtol(string, NULL, 10);
+    //Effectively checks whether casting the long read would lead to overflow (underflow)
+    //and if it doesn't, then simply cast the result in next_int
+    return (number < 0 && number > INT_MIN) || (number > 0 && number < INT_MAX);
 }
 
 bool is_next_double(FILE *fp) {
-    char line[MAX_LINE_LENGTH];
     int len;
+    char string[MAX_LINE_LENGTH];
 
-    if( (len = next(fp, line)) == 0 )
+    if( (len = next(fp, string)) == EOF) {
+        printf("EOF, no next double.\n");
         return false;
-
-    //Rewind
+    }
     fseek(fp, -len, SEEK_CUR);
-    //Parse string to check if it's a number
-    //There should only be one decimal
-    int decimal_count = 0;
 
-    //Notice that this works similarly to is_next_int
-    //and returns positively even if the next number is technically an int
-    //which just means that if we expect a float, and get an int
-    //we'll end up promoting it just as we would want
-    int i = 0;
-    if(line[i] == '-') {
-        //Checks edge case where the string is just "-"
-        if(len == 2)
-            return false;
+    char *end_of_number;
+    strtod(string, &end_of_number);
 
-        i++;
+    return end_of_number[0] == '\0';
+}
+
+long next_long(FILE *fp) {
+    if(!is_next_long(fp)) {
+        printf("Next string is not of type long. Please check for proper input.\n");
+        printf("Returning 0.\n");
+        return 0;
+    }
+    char string[MAX_LINE_LENGTH];
+    //is_next_long checks for EOF, so we can be confident in next working properly
+    next(fp, string);
+    //Since we are confident that the next entry is a number
+    //we can pass NULL into the endptr argument
+    return strtol(string, NULL, 10);
+}
+
+int next_int(FILE *fp) {
+    if(!is_next_int(fp)) {
+        printf("Next string is not of type int. Please check for proper input.\n");
+        printf("Returning 0.\n");
+        return 0;
     }
 
-    for(; i < (len - 1); i++) {
-        if(line[i] == '.') {
-            //If there's two decimal points, it's not a float
-            //or if the decimal is at the end of the number (i.e. 352. )
-            if(++decimal_count > 1 || i == (len - 1))
-                return false;
-            
-            //Continue the loop, since we don't want to check if it's a digit,
-            //it clearly isn't, but it's still valid syntax
-            continue;
-        }
-        //You're not a decimal point, and you're not a number
-        //so you're not a valid float
-        if(!isdigit(line[i]))
-            return false;
-        
+    return (int)next_long(fp);
+}
+
+double next_double(FILE *fp) {
+    if(!is_next_double(fp)) {
+        printf("Next string is not of type double. Please check for proper input.\n");
+        printf("Returning 0.\n");
+        return 0;
     }
+    char string[MAX_LINE_LENGTH];
+    next(fp, string);
 
-    return true;
+    return strtod(string, NULL);
 }
 
-int next_int(FILE *fp, int *ip) {
-    if(!is_next_int(fp))
-        return 0;
-
-    char number_string[MAX_LINE_LENGTH];
-    //Fills the string with the number read, to-be-parsed
-    next(fp, number_string);
-    //Converts the number to base 10 and stores it in the
-    //number pointer passed in
-    *ip = strtol(number_string, NULL, 10);
-
-    //Success return value
-    return 1;
-}
-
-int next_double(FILE *fp, double *dp) {
-    if(!is_next_double(fp))
-        return 0;
-
-    char number_string[MAX_LINE_LENGTH];
-
-    next(fp, number_string);
-
-    *dp = strtod(number_string, NULL);
-
-    //Success
-    return 1;
-}
-
-int next_doubles(FILE *fp, int times, double *dp) {
+int next_doubles(FILE *fp, double *dp, int times) {
     for(int i = 0; i < times; i++) {
-        //If a single reading of next_double fails, the function fails as a whole
-        if(!next_double(fp, (dp + i))) 
+        //If 
+        if(!is_next_double(fp)) {
+            printf("next_doubles failed on count: %d/%d.\n", i, times);
             return 0;
+        }
+        *(dp + i) = next_double(fp);
     }
     //Success
     return 1;
