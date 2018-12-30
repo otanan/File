@@ -120,3 +120,7 @@ int next_doubles(FILE *fp, double *dp, int times) {
 }
 
 int remaining_line(FILE *fp, char *line) { return fgets(line, MAX_LINE_LENGTH, fp) != NULL; }
+void skip_line(FILE *fp) {
+    char line[MAX_LINE_LENGTH];
+    remaining_line(fp, line);
+}

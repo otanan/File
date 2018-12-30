@@ -31,4 +31,6 @@ int next_doubles(FILE *, double *, int times);
 //returns 1 if the pointer to the remainder of the file is store properly
 //returns 0 if there is no remaining text or other failure
 int remaining_line(FILE *, char *line);
+//Skips the line by simply calling remaining_line and ignoring the return value
+void skip_line(FILE *);
 /***********************END PROTOTYPES***********************/
