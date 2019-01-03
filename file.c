@@ -78,8 +78,8 @@ bool is_next_double(FILE *fp) {
 long next_long(FILE *fp) {
     if(!is_next_long(fp)) {
         printf(
-            "Next string is not of type long.
-             Please check for proper input.\n"
+            "Next string is not of type long."
+            " Please check for proper input.\n"
         );
         printf("Returning 0.\n");
         return 0;
