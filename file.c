@@ -1,3 +1,9 @@
+/*
+*Filename:      file.c
+*Author:        Jonathan Delgado
+*Description:   File IO wrapper to make file reading more intuitive in C.
+*/
+
 /***********************Include***********************/
 //For string converters (strtol etc.)
 #include <stdlib.h>
@@ -7,8 +13,6 @@
 #include <limits.h>
 
 #include "file.h"
-
-//Add error checking for string to numbers
 
 int next(FILE *fp, char *string) {
     //If the next character is EOF, signal the end
@@ -51,7 +55,8 @@ bool is_next_int(FILE *fp) {
     long number = strtol(string, NULL, 10);
     //Effectively checks whether casting the long read would lead to overflow (underflow)
     //and if it doesn't, then simply cast the result in next_int
-    return (number < 0 && number > INT_MIN) || (number > 0 && number < INT_MAX);
+    return (number < 0 && number > INT_MIN)
+        || (number > 0 && number < INT_MAX);
 }
 
 bool is_next_double(FILE *fp) {
@@ -72,7 +77,10 @@ bool is_next_double(FILE *fp) {
 
 long next_long(FILE *fp) {
     if(!is_next_long(fp)) {
-        printf("Next string is not of type long. Please check for proper input.\n");
+        printf(
+            "Next string is not of type long.
+             Please check for proper input.\n"
+        );
         printf("Returning 0.\n");
         return 0;
     }
@@ -119,7 +127,10 @@ int next_doubles(FILE *fp, double *dp, int times) {
     return 1;
 }
 
-int remaining_line(FILE *fp, char *line) { return fgets(line, MAX_LINE_LENGTH, fp) != NULL; }
+int remaining_line(FILE *fp, char *line) {
+    return fgets(line, MAX_LINE_LENGTH, fp) != NULL;
+}
+
 void skip_line(FILE *fp) {
     char line[MAX_LINE_LENGTH];
     remaining_line(fp, line);
